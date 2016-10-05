@@ -44,6 +44,19 @@ class ViewController: UIViewController {
     var feltTemp: FeltTemp = .none
     var windDirection: WindDirection = .V
     var weatherCondition: WeatherCondition = .none
+    var airportCode: AirportCode? {
+        didSet {
+            guard let airportDict = airportDictionary else {
+                return
+            }
+            
+            guard let code = airportCode?.rawValue else {
+                return
+            }
+            airportStatus = airportDict[code] as? AirportStatus
+        }
+    }
+    
     
     // Airport Status Dictionary
     var airportDictionary: NSDictionary? {
@@ -51,7 +64,7 @@ class ViewController: UIViewController {
             if let airportDict = airportDictionary {
                 let sortedKeys = (airportDict.allKeys as! [String]).sorted(by: <)
                 if let code = sortedKeys.first {
-                    
+                    self.airportCode = ViewController.AirportCode(rawValue: code)
                 }
             }
         }
@@ -91,6 +104,20 @@ extension ViewController {
     
     // Airport Code Enum
 
+    enum AirportCode: String {
+        case ATL, DFW, JFK, LAX, ORD
+        
+        mutating func next() {
+            switch self {
+            case .ATL: self = .DFW
+            case .DFW: self = .JFK
+            case .JFK: self = .LAX
+            case .LAX: self = .ORD
+            case .ORD: self = .ATL
+            }
+        }
+    }
+    
     
     // Weather Condition Enum
     enum WeatherCondition: String {
@@ -269,7 +296,8 @@ extension ViewController {
     // Change status for view
     func changeStatusWithAnimation() {
         if statusReceived {
-            
+            guard let showNext = airportCode?.next() else { return }
+            showNext
             UIView.transition(with: view, duration: 0.5, options: .transitionFlipFromRight, animations: nil, completion: nil)
         }
     }
